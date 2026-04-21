@@ -106,7 +106,8 @@ assignmate-ai/
 
 ## 📸 Workflow Preview
 
-> *(Add a screenshot of your n8n workflow canvas here)*
+<img width="1509" height="641" alt="image" src="https://github.com/user-attachments/assets/897834e7-22c0-4656-83d3-c2f9d7ee4203" />
+
 
 ---
 
