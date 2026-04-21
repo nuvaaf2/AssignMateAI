@@ -1,0 +1,901 @@
+{
+  "name": "Automation Email Campaignment using n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "emailSubject",
+              "value": "Assignment Submission Request",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "emailBody",
+              "value": "Dear Student,\n\nPlease submit your assignment by replying to this email. We accept only PDF Formats.\n\nThank you.",
+              "type": "string"
+            },
+            {
+              "id": "8ae4029a-4ceb-40ad-9522-f50eeda9402b",
+              "name": "assign_title",
+              "value": "={{ $json.message.text.split('Title : ')[1] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5012d02f-c62f-4564-82ca-5aea1c3d890f",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -656,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "downloadAttachments": true,
+        "dataPropertyAttachmentsPrefixName": "attachment_0",
+        "options": {
+          "customEmailConfig": "=[\"/^(re:\\\\s*)*Subject\\\\s*:\\\\s*Title\\\\s*Assigned/i\"]",
+          "trackLastMessageId": true
+        }
+      },
+      "id": "d7478701-a99c-44ef-b1a9-10127a727788",
+      "name": "IMAP Trigger - Student Replies",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        592
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "imap": {
+          "id": "1ZYCqbqEzGDFD4nI",
+          "name": "IMAP For Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ Object.keys($binary).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "1473a51d-ffe8-4f4b-ab82-db2fe19d529f",
+              "leftValue": "={{ $binary[Object.keys($binary)[0]]?.mimeType || \"\" }}",
+              "rightValue": "application/",
+              "operator": {
+                "type": "string",
+                "operation": "contains",
+                "name": "filter.operator.contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "2465ecde-078d-4095-8445-2a8b28a85781",
+      "name": "Check for Attachments",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6883906917",
+        "text": "={{ $json.from }} has replied but did not include an attachment.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "85a33f04-f2c3-4875-88ec-c0cedccdac0e",
+      "name": "Notify - No Attachment",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        768
+      ],
+      "webhookId": "5ac37cef-8fac-4c43-a315-a9be670f4713",
+      "credentials": {
+        "telegramApi": {
+          "id": "S3pysPTyYXXIbVl6",
+          "name": "Nuvaaf AN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "=nuwaaf2@gmail.com",
+        "toEmail": "={{ $json['Student\\'s Email'] }}",
+        "subject": "=Subject : Title Assigned, Title : {{ $json['Assignment Title'] }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">\n\n  <h2 style=\"color: #d32f2f; margin-bottom: 20px;\">⚠️ Action Required: Assignment Submission</h2>\n\n  <p>Dear Student,</p>\n\n  <p>This is an automated reminder that we have not yet received your assignment submission for <strong> {{ $('Requesting Emails using Telegram').item.json.message.text }} </strong>.</p>\n\n  <p>To ensure your grades are recorded correctly, please submit your work immediately following these steps:</p>\n<p> Assignment Title : {{ $('Workflow Configuration').item.json.assign_title }}\n\n  <div style=\"background-color: #f9f9f9; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;\">\n    <p style=\"margin: 0; font-weight: bold;\">Submission Instructions:</p>\n    <ul style=\"margin-top: 10px; margin-bottom: 0;\">\n      <li><strong>Step 1:</strong> Click \"Reply\" to this email.</li>\n      <li><strong>Step 2:</strong> Attach your assignment file.</li>\n      <li><strong>Accepted Formats:</strong> PDF (.pdf) </li>\n    </ul>\n  </div>\n\n  <p>If you have already submitted your assignment in the last hour, please disregard this message.</p>\n\n  <br>\n  <p>Best regards,</p>\n  <p><strong>Academic Coordinator</strong><br>\n  <em>Automated Notification System</em></p>\n\n</div>",
+        "options": {}
+      },
+      "id": "a3eb9087-3d75-4ec4-91c2-9f4854e91477",
+      "name": "SMTP Email Tool",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        32
+      ],
+      "webhookId": "ba10a894-7dd0-4f01-b4ec-b030e95e94d0",
+      "credentials": {
+        "smtp": {
+          "id": "HFwfaPhCs5W5855e",
+          "name": "SMTP for Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "530340ea-3b16-44d5-877a-da3c5a8eebc8",
+      "name": "Requesting Emails using Telegram",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -928,
+        176
+      ],
+      "webhookId": "e1c1803a-3ef6-41d3-a54b-5bf7da4ec312",
+      "credentials": {
+        "telegramApi": {
+          "id": "S3pysPTyYXXIbVl6",
+          "name": "Nuvaaf AN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 0.3,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        816
+      ],
+      "id": "7c61b403-d613-48cf-ae9f-b6d8039a8235",
+      "name": "Wait",
+      "webhookId": "f8f93889-7f5b-461c-8c98-9ed6b18e47fa"
+    },
+    {
+      "parameters": {
+        "fromEmail": "=nuwaaf2@gmail.com",
+        "toEmail": "={{ $('Check for Attachments').item.json.from }}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333333; }\n  .container { width: 80%; margin: 20px auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; }\n  .header { border-bottom: 2px solid #d9534f; padding-bottom: 10px; margin-bottom: 20px; }\n  .footer { margin-top: 30px; font-size: 0.8em; color: #777; border-top: 1px solid #eee; padding-top: 10px; }\n  .button { background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }\n</style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h2 style=\"color: #d9534f; margin: 0;\">Urgent: Missing Assignment</h2>\n    </div>\n    \n    <p>Dear Student,</p>\n    \n    <p>This is a formal reminder regarding your pending submission for the assignment: <strong>\"Complete the Assignment soon!\"</strong>.</p>\n    \n    <p>Our records indicate that we have not yet received your work. Please ensure that you submit it as soon as possible to avoid any grading penalties or further warnings.</p>\n    \n    <p>If you have already submitted the assignment, please disregard this email or reply with a copy of your submission receipt.</p>\n    \n    <a href=\"#\" class=\"button\">Go to Submission Portal</a>\n\n    <div class=\"footer\">\n      <p>Automated Warning System | Nuvaaf A N</p>\n      <p>Please do not reply directly to this automated message unless you have an inquiry regarding the assignment status.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        928
+      ],
+      "id": "90d05379-bf80-4353-a151-6dce85571f24",
+      "name": "Send Warning Email",
+      "webhookId": "aa1fc804-ee0f-4b6d-867b-4b20fe525c59",
+      "credentials": {
+        "smtp": {
+          "id": "HFwfaPhCs5W5855e",
+          "name": "SMTP for Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The student with email: {{ $('IMAP Trigger - Student Replies').item.json.from }} has replied without an attachment. Send them the warning.",
+        "options": {
+          "systemMessage": "=You are an Academic Compliance Assistant.\nYour Goal: Send a warning email to a student who replied without the required file.\nExecution Steps:\n1. Extract the email from the user input.\n2. Send an email to that address with Subject: \"URGENT: Missing Attachment\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        192,
+        800
+      ],
+      "id": "fa3d3d82-7363-47f9-b449-39cf018628ff",
+      "name": "AI Academic Compliance Assistant"
+    },
+    {
+      "parameters": {
+        "chatId": "6883906917",
+        "text": "={{ $('Check for Attachments').item.json.from }} has submitted the assignment with an attachment.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "2c61024a-fe55-4b1b-ba31-23273f8f4caf",
+      "name": "Notify - Assignment Submitted",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        304
+      ],
+      "webhookId": "1fbbb8d9-9481-47a2-ac8f-9aa504734ba1",
+      "credentials": {
+        "telegramApi": {
+          "id": "S3pysPTyYXXIbVl6",
+          "name": "Nuvaaf AN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        400
+      ],
+      "id": "fb7447c5-1046-4291-b3de-7ea59058a271",
+      "name": "Extract from File",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "6883906917",
+        "text": "={{ $('IMAP Trigger - Student Replies').item.json.from }} has replied but did not send a valid assignment. No mark will be given.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "72c147b5-ad2f-48ba-980a-4da0734c94e4",
+      "name": "Notify- Invalid Assignment",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        592
+      ],
+      "webhookId": "5ac37cef-8fac-4c43-a315-a9be670f4713",
+      "credentials": {
+        "telegramApi": {
+          "id": "S3pysPTyYXXIbVl6",
+          "name": "Nuvaaf AN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "nuwaaf2@gmail.com",
+        "toEmail": "={{ $('Check for Attachments').item.json.from }}",
+        "subject": "Successfully received your assignment!",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n<style>\n    .email-wrapper {\n        background-color: #f4f7f9;\n        padding: 40px 0;\n        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\n    }\n    .email-container {\n        max-width: 550px;\n        margin: 0 auto;\n        background-color: #ffffff;\n        border-radius: 4px;\n        box-shadow: 0 2px 10px rgba(0,0,0,0.05);\n        overflow: hidden;\n        border-top: 4px solid #0056b3;\n    }\n    .content {\n        padding: 40px;\n        text-align: center;\n    }\n    .icon {\n        font-size: 48px;\n        color: #28a745;\n        margin-bottom: 20px;\n    }\n    .title {\n        color: #1a1a1a;\n        font-size: 22px;\n        font-weight: 600;\n        margin-bottom: 15px;\n    }\n    .message {\n        color: #555555;\n        line-height: 1.6;\n        font-size: 16px;\n        margin-bottom: 30px;\n    }\n    .footer {\n        padding: 20px;\n        background-color: #fafafa;\n        border-top: 1px solid #eeeeee;\n        font-size: 13px;\n        color: #888888;\n        text-align: center;\n    }\n</style>\n</head>\n<body>\n    <div class=\"email-wrapper\">\n        <div class=\"email-container\">\n            <div class=\"content\">\n                <div class=\"icon\">✓</div>\n                <h1 class=\"title\">Submission Received</h1>\n                <p class=\"message\">\n                    Dear Student,<br><br>\n                    Your assignment has been successfully received and logged. No further action is required from your side at this time.\n                </p>\n                <p style=\"font-size: 14px; color: #999;\">\n                    You will be notified once the review process is complete.\n                </p>\n            </div>\n            <div class=\"footer\">\n                <strong>Kongunadu Arts and Science College</strong><br>\n                Department of Computer Technology\n            </div>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        704,
+        304
+      ],
+      "id": "3242bf86-7db1-4421-8b8f-9fe6d34c168e",
+      "name": "Successful message",
+      "webhookId": "77e6d39f-8fb8-4e11-9112-b83992e20f27",
+      "credentials": {
+        "smtp": {
+          "id": "HFwfaPhCs5W5855e",
+          "name": "SMTP for Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "nuwaaf2@gmail.com",
+        "toEmail": "={{ $('IMAP Trigger - Student Replies').item.json.from }}",
+        "subject": "Submission Failed: Invalid Assignment",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n<style>\n    .email-wrapper {\n        background-color: #fcfcfc;\n        padding: 40px 0;\n        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\n    }\n    .email-container {\n        max-width: 550px;\n        margin: 0 auto;\n        background-color: #ffffff;\n        border-radius: 4px;\n        box-shadow: 0 2px 10px rgba(0,0,0,0.05);\n        overflow: hidden;\n        border-top: 4px solid #d32f2f;\n    }\n    .content {\n        padding: 40px;\n        text-align: center;\n    }\n    .icon {\n        font-size: 48px;\n        color: #d32f2f;\n        margin-bottom: 20px;\n    }\n    .title {\n        color: #1a1a1a;\n        font-size: 22px;\n        font-weight: 600;\n        margin-bottom: 15px;\n    }\n    .message {\n        color: #555555;\n        line-height: 1.6;\n        font-size: 16px;\n        margin-bottom: 30px;\n    }\n    .instruction-box {\n        background-color: #fff8f8;\n        border: 1px dashed #d32f2f;\n        padding: 15px;\n        border-radius: 4px;\n        text-align: left;\n        display: inline-block;\n        margin-bottom: 20px;\n    }\n    .footer {\n        padding: 20px;\n        background-color: #fafafa;\n        border-top: 1px solid #eeeeee;\n        font-size: 13px;\n        color: #888888;\n        text-align: center;\n    }\n</style>\n</head>\n<body>\n    <div class=\"email-wrapper\">\n        <div class=\"email-container\">\n            <div class=\"content\">\n                <div class=\"icon\">⚠</div>\n                <h1 class=\"title\">Action Required: Invalid Submission</h1>\n                <p class=\"message\">\n                    Dear Student,<br><br>\n                    The file you recently submitted could not be processed by the system. This usually happens if the file format is not supported or the file is corrupted.\n                </p>\n                \n                <div class=\"instruction-box\">\n                    <strong>Submission Guidelines:</strong>\n                    <ul style=\"margin: 10px 0; font-size: 14px; color: #333;\">\n                        <li>Accepted Formats: <strong>PDF (.pdf)</strong> or <strong>Word (.docx)</strong></li>\n                        <li>Ensure the file is not password protected.</li>\n                    </ul>\n                </div>\n\n                <p style=\"font-size: 14px; color: #666;\">\n                    Please reply to the original assignment request with the correct file format.\n                </p>\n            </div>\n            <div class=\"footer\">\n                <strong>Kongunadu Arts and Science College</strong><br>\n                Department of Computer Technology\n            </div>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        592
+      ],
+      "id": "d9040279-b580-419b-aa0d-b69d9bb0cbdb",
+      "name": "Invalid content message",
+      "webhookId": "a98382e7-7bbf-4417-8dcd-8fb8567ed353",
+      "credentials": {
+        "smtp": {
+          "id": "HFwfaPhCs5W5855e",
+          "name": "SMTP for Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are a strict academic Teaching Assistant. Your job is to analyze the text of a student's submission to ensure it matches the required assignment topic.\n\nIf the content is clearly related to the topic, reply with exactly: VALID_SUBMISSION\n\nIf the content is random, empty, or completely unrelated (like a cooking recipe or a blank page), reply with exactly: INVALID_CONTENT"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        48,
+        368
+      ],
+      "id": "ca3aaecb-d4e8-4134-b24c-0448fc52be25",
+      "name": "AI Teaching Assistant"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4d420d0b-bc18-4498-b42f-431007e1e49d",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "VALID_SUBMISSION",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        336
+      ],
+      "id": "7665df70-d087-4126-8d25-cc86f3177c63",
+      "name": "Check for valid submission"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        672
+      ],
+      "id": "3f9f4260-6994-4e18-aca7-81f4b6c58bdf",
+      "name": "ChatGPT Bot",
+      "credentials": {
+        "openAiApi": {
+          "id": "TUjte95Jy9s6K9dw",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE",
+          "mode": "list",
+          "cachedResultName": "Student Email Login Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 0,
+            "Assignment Status": "Completed",
+            "Student's Email": "={{ $json.envelope.to[0] }}"
+          },
+          "matchingColumns": [
+            "Student's Email"
+          ],
+          "schema": [
+            {
+              "id": "Student's Name ",
+              "displayName": "Student's Name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Student's Email",
+              "displayName": "Student's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Assignment Status",
+              "displayName": "Assignment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        304
+      ],
+      "id": "5348192a-0f49-4c5f-a4e0-8de0ed29c8fa",
+      "name": "Update Sheet - Mark as Submitted",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YYB6ssdW958JYW3c",
+          "name": "Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        960
+      ],
+      "id": "e2f47929-a030-4430-8b38-49d53fc4d398",
+      "name": "OpenAI Chatbot For AI Assistant ",
+      "credentials": {
+        "openAiApi": {
+          "id": "TUjte95Jy9s6K9dw",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE",
+          "mode": "list",
+          "cachedResultName": "Student Email Login Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Assignment Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -432,
+        112
+      ],
+      "id": "94689b3a-47ac-41d7-94eb-ea0aa8f2c16c",
+      "name": "Get Pending Students",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YYB6ssdW958JYW3c",
+          "name": "Nuvaaf A N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE",
+          "mode": "list",
+          "cachedResultName": "Student Email Login Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HVOnyX8lc7jVe-YfU56JgpGNEypgyRkvbbxAkQ6yDUE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Assignment Title": "={{ $('Workflow Configuration').item.json.assign_title }}",
+            "Student's Email": "={{ $json[\"Student's Email\"] }}"
+          },
+          "matchingColumns": [
+            "Student's Email"
+          ],
+          "schema": [
+            {
+              "id": "Student's Name ",
+              "displayName": "Student's Name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Student's Email",
+              "displayName": "Student's Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Assignment Status",
+              "displayName": "Assignment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Assignment Title",
+              "displayName": "Assignment Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -240,
+        64
+      ],
+      "id": "f166c27d-5738-4575-a63f-95df0d1f61c0",
+      "name": "The Assigner",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YYB6ssdW958JYW3c",
+          "name": "Nuvaaf A N"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IMAP Trigger - Student Replies": {
+      "main": [
+        [
+          {
+            "node": "Check for Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Attachments": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify - No Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Get Pending Students",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requesting Emails using Telegram": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify - No Attachment": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Academic Compliance Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Teaching Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Successful message": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - Mark as Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - Mark as Submitted": {
+      "main": [
+        [
+          {
+            "node": "Notify - Assignment Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invalid content message": {
+      "main": [
+        [
+          {
+            "node": "Notify- Invalid Assignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Teaching Assistant": {
+      "main": [
+        [
+          {
+            "node": "Check for valid submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for valid submission": {
+      "main": [
+        [
+          {
+            "node": "Successful message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid content message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT Bot": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Teaching Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chatbot For AI Assistant ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Academic Compliance Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Academic Compliance Assistant": {
+      "main": [
+        [
+          {
+            "node": "Send Warning Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending Students": {
+      "main": [
+        [
+          {
+            "node": "The Assigner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "The Assigner": {
+      "main": [
+        [
+          {
+            "node": "SMTP Email Tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "8a7c73bc-ee22-4186-ace1-407c341131b4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "611c84917ac37ceaa0471223d237b1d461b1dfb3a8d0880f94be4bfe53c0f349"
+  },
+  "id": "qmZ-c0ULE4xrHHXmC7BRT",
+  "tags": [
+    {
+      "updatedAt": "2025-08-13T16:38:39.041Z",
+      "createdAt": "2025-08-13T16:38:39.041Z",
+      "id": "MdDyRG5DTXU3YXLr",
+      "name": "gmail"
+    },
+    {
+      "updatedAt": "2025-08-27T06:04:16.999Z",
+      "createdAt": "2025-08-27T06:04:16.999Z",
+      "id": "Xbxg1nCme2pAcsON",
+      "name": "AI"
+    }
+  ]
+}
