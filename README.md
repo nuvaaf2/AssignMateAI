@@ -121,7 +121,7 @@ assignmate-ai/
 
 **Nuvaaf A N** — AI Automation Engineer | n8n Builder
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://linkedin.com/in/YOUR_LINKEDIN)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/nuvaaf-a-n-0b53a5341/)
 [![GitHub](https://img.shields.io/badge/GitHub-nuvaaf2-181717?style=flat&logo=github)](https://github.com/nuvaaf2)
 
 ---
