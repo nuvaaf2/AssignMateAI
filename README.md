@@ -97,9 +97,6 @@ Feedback sent back to student via SMTP email
 ```
 assignmate-ai/
 ├── assignmate-ai-workflow.json   # n8n workflow export
-├── README.md
-└── screenshots/
-    └── workflow-canvas.png       # n8n workflow screenshot
 ```
 
 ---
